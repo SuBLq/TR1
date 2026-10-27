@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111614">
+  <meta name="description" content="Личный таймер силовых тренировок: программа, подходы, отдых и история.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Круг — твоя тренировка</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./engine.js" defer></script>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <a class="brand" href="./" aria-label="Круг — главная" id="brand-link"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 10V6h16v4M5 12v8m22-8v8M9 8v16m14-16v16M9 16h14"/></svg>круг<span class="brand-dot">.</span></a>
+      <span id="header-note" class="eyebrow">ЛИЧНЫЙ ТРЕНИНГ</span>
+      <button id="session-sound" class="icon-button" hidden aria-label="Выключить звук" title="Звук">♪</button>
+    </header>
+    <div id="storage-warning" class="notice" role="alert" hidden>Браузер не разрешает сохранить данные. Не закрывай страницу до конца занятия и скачай резервную копию.</div>
+    <nav class="tabs" id="main-tabs" aria-label="Разделы">
+      <button class="tab active" data-action="tab-program" aria-current="page">Программа</button>
+      <button class="tab" data-action="tab-history">История <span id="history-count">0</span></button>
+    </nav>
+
+    <main>
+      <section id="program-screen" class="screen">
+        <div class="page-heading"><div><p class="eyebrow">НАЧИНАЕТСЯ С ПЕРВОГО ПОВТОРА</p><h1>Твоя программа</h1></div><span class="small-orbit" aria-hidden="true">↗</span></div>
+        <div class="program-overview"><input id="program-name" class="title-input" aria-label="Название программы" maxlength="80"><div class="overview-metrics" id="program-metrics"></div></div>
+        <div class="section-label"><h2>Порядок выполнения</h2></div>
+        <div class="segmented" aria-label="Порядок выполнения"><button data-action="mode-rounds" aria-pressed="true">По кругам</button><button data-action="mode-grouped" aria-pressed="false">По упражнениям</button></div>
+        <p class="helper" id="mode-description"></p>
+        <div class="section-label exercises-heading"><h2>Упражнения</h2><button class="text-button" data-action="add-exercise">＋ Добавить</button></div>
+        <div id="exercise-list" class="exercise-list"></div>
+        <details class="settings-panel"><summary>Таймер и сигналы <span aria-hidden="true">＋</span></summary><div class="settings-body">
+          <label class="switch-row"><span>Звук после отдыха<small>Короткий сигнал перед следующим подходом</small></span><input id="setting-sound" type="checkbox" role="switch"></label>
+          <label class="switch-row"><span>Вибрация<small>Если поддерживается телефоном</small></span><input id="setting-vibrate" type="checkbox" role="switch"></label>
+          <label class="switch-row"><span>Автостарт через 10 секунд<small>После отдыха можно начать и по тапу</small></span><input id="setting-auto" type="checkbox" role="switch"></label>
+          <label class="switch-row"><span>Оставлять экран включённым<small>Во время тренировки, если браузер разрешит</small></span><input id="setting-wake" type="checkbox" role="switch"></label>
+          <button class="button secondary full" data-action="test-sound">♪ Проверить сигнал</button>
+        </div></details>
+        <div class="backup-actions"><button class="text-button" data-action="export">Скачать копию</button><span>·</span><button class="text-button" data-action="import">Загрузить копию</button><span>·</span><a href="./README.md" class="text-button" target="_blank" rel="noopener">Инструкция ↗</a></div>
+        <p class="local-note">Программа и история хранятся в этом браузере.</p>
+      </section>
+
+      <section id="workout-screen" class="screen workout-screen" hidden aria-label="Текущая тренировка">
+        <div class="session-topline"><span id="session-position"></span><span id="session-counter"></span></div>
+        <div class="progress-track" role="progressbar" id="session-progress" aria-label="Выполненные интервалы" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-fill"></div></div>
+        <div id="phase-heading" class="phase-heading"><span class="status-dot"></span><span id="phase-label">ПОДХОД</span></div>
+        <h1 id="current-name" class="current-name"></h1>
+        <div id="current-tags" class="current-tags"></div>
+        <div class="timer-wrap"><svg class="timer-ring" viewBox="0 0 260 260" aria-hidden="true"><circle class="timer-track" cx="130" cy="130" r="118"/><circle id="timer-arc" cx="130" cy="130" r="118"/></svg><div class="timer-face"><span id="timer-value" class="timer-value" role="timer" aria-live="off">00:00</span><span id="timer-caption" class="timer-caption">время выполнения</span></div></div>
+        <p id="paused-label" class="paused-label" hidden>На паузе · таймер остановлен</p>
+        <div id="round-complete" class="round-complete" hidden></div>
+        <p id="current-note" class="exercise-note"></p>
+        <label id="actual-reps-label" class="actual-reps">Повторов получилось <input id="actual-reps" type="text" inputmode="numeric" maxlength="30" placeholder="необязательно" autocomplete="off"></label>
+        <button class="button secondary rest-extra" id="extend-button" data-action="extend-rest" hidden>＋ 30 секунд отдыха</button>
+        <div class="session-stats"><div><span id="stat-work">00:00</span><small>работа</small></div><div><span id="stat-round">00:00</span><small id="stat-round-label">этот круг</small></div><div><span id="stat-total">00:00</span><small>всё занятие</small></div></div>
+        <div class="next-card"><span class="eyebrow" id="next-label">ДАЛЕЕ</span><strong id="next-name"></strong><span id="next-detail"></span></div>
+        <p id="wake-status" class="local-note"></p>
+      </section>
+
+      <section id="summary-screen" class="screen" hidden>
+        <div class="finish-mark" aria-hidden="true">✓</div><p class="eyebrow summary-eyebrow" id="summary-eyebrow">ТРЕНИРОВКА ЗАВЕРШЕНА</p><h1 class="summary-title" id="summary-title">Хорошая работа.</h1><p id="summary-date" class="helper center"></p>
+        <div class="summary-metrics" id="summary-metrics"></div><div class="section-label"><h2 id="summary-groups-title">Время по кругам</h2></div><div id="summary-groups" class="summary-groups"></div>
+        <div class="section-label"><h2>Все подходы</h2></div><div id="summary-results"></div>
+        <button class="button primary full summary-back" data-action="summary-back">К программе</button>
+      </section>
+
+      <section id="history-screen" class="screen" hidden><div class="page-heading"><div><p class="eyebrow">КАЖДОЕ ЗАНЯТИЕ СЧИТАЕТСЯ</p><h1>История</h1></div></div><div id="history-list"></div><p class="local-note">Сохраняются последние 50 тренировок.<br>Для переноса на другой телефон скачай копию в разделе «Программа».</p></section>
+    </main>
+  </div>
+
+  <div id="program-dock" class="bottom-dock"><div class="dock-inner"><p id="start-description">Можно начать в своём темпе</p><button class="button primary full" data-action="start">Начать тренировку <span aria-hidden="true">↗</span></button></div></div>
+  <div id="workout-dock" class="bottom-dock" hidden><div class="dock-inner"><button id="primary-workout" class="button primary full" data-action="workout-primary">Закончить подход</button><div class="session-controls"><button class="button secondary" id="pause-button" data-action="pause">Ⅱ Пауза</button><button class="button quiet" data-action="end-workout">Завершить тренировку</button></div></div></div>
+
+  <dialog id="exercise-dialog" class="sheet" aria-labelledby="exercise-dialog-title"><form id="exercise-form"><div class="sheet-header"><h2 id="exercise-dialog-title">Упражнение</h2><button type="button" class="icon-button" data-action="close-exercise" aria-label="Закрыть">✕</button></div><label class="field">Название<input name="name" required maxlength="120" placeholder="Например, жим на полу"></label><label class="field">Вес и инвентарь<input name="equipment" maxlength="120" placeholder="Две гантели по 12,38 кг"></label><div class="form-row"><label class="field">Подходов<input name="sets" type="number" min="1" max="8" required inputmode="numeric"></label><label class="field">Отдых, сек<input name="rest" type="number" min="0" max="900" required inputmode="numeric"></label></div><fieldset class="reps-fieldset"><legend>Повторы в каждом подходе</legend><p class="helper">Можно указать число или диапазон, например 8–12.</p><div id="reps-fields" class="reps-fields"></div></fieldset><label class="switch-row"><span>Поочерёдно на каждую сторону<small>Отдельный таймер для правой и левой</small></span><input name="sides" type="checkbox" role="switch"></label><label class="field" id="side-rest-field">Отдых между сторонами, сек<input name="sideRest" type="number" min="0" max="900" inputmode="numeric"></label><label class="field">Заметка<textarea name="note" rows="2" maxlength="500" placeholder="Подсказка для себя"></textarea></label><button class="button primary full" type="submit">Сохранить упражнение</button></form></dialog>
+  <dialog id="confirm-dialog" class="sheet compact" aria-labelledby="confirm-title" aria-describedby="confirm-description"><div class="sheet-header"><h2 id="confirm-title"></h2></div><p id="confirm-description" class="helper"></p><div class="confirm-actions"><button id="confirm-yes" class="button primary">Подтвердить</button><button id="confirm-no" class="button secondary">Отмена</button></div></dialog>
+  <input id="import-file" type="file" accept="application/json,.json" hidden>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <div id="announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  <noscript><p class="notice">Для таймера нужно включить JavaScript в браузере.</p></noscript>
+</body>
+</html>
